@@ -1,0 +1,22 @@
+{
+  "mistral": {
+    "predictions": [],
+    "metrics": [],
+    "processing_times": [],
+    "aggregated": {}
+  },
+  "qwen": {
+    "predictions": [],
+    "metrics": [],
+    "processing_times": [],
+    "aggregated": {}
+  },
+  "metadata": {
+    "timestamp": "2025-05-02T14:31:51.766199",
+    "num_samples": 2,
+    "document_types": [
+      " This is an invoice document, specifically styled as \"National Media Billing.\"",
+      "This image contains a financial document known as a \"Staffing Schedule Budget\" for The Tobacco Industry Testing Laboratory for the year 2001.\n\n###"
+    ]
+  }
+}

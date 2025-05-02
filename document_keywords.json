@@ -1,0 +1,221 @@
+{
+    "account_statement": {
+        "en": [
+            "Account Statement",
+            "Bank Statement",
+            "Monthly Statement",
+            "Account Summary",
+            "Transaction Statement",
+            "Account Activity",
+            "Bank Account Statement",
+            "Current Account Statement",
+            "Savings Account Statement",
+            "Checking Account Statement"
+        ],
+        "de": [
+            "Kontoauszug",
+            "Bankauszug",
+            "Mitteilung über Kontoschliessung",
+            "Bestätigung der Kontoeröffnung",
+            "Monatsauszug",
+            "Kontobewegungen",
+            "Kontoübersicht",
+            "Kontoumsatz",
+            "Girokontoauszug",
+            "Sparkontoauszug"
+        ],
+        "fr": [
+            "Relevé de compte",
+            "Relevé bancaire",
+            "Relevé mensuel",
+            "Résumé de compte",
+            "Relevé des opérations",
+            "Relevé d'activité",
+            "Relevé de compte bancaire",
+            "Relevé de compte courant",
+            "Relevé de compte épargne"
+        ],
+        "es": [
+            "Extracto de cuenta",
+            "Extracto bancario",
+            "Notificación de descubierto en cuenta",
+            "Extracto mensual",
+            "Resumen de cuenta",
+            "Estado de cuenta",
+            "Movimientos de cuenta",
+            "Extracto de cuenta corriente",
+            "Extracto de cuenta de ahorro"
+        ],
+        "it": [
+            "Estratto conto",
+            "Estratto bancario",
+            "Estratto mensile",
+            "Riepilogo conto",
+            "Movimenti conto",
+            "Estratto conto corrente",
+            "Estratto conto risparmio"
+        ]
+    },
+    "investment": {
+        "en": [
+            "Investment Statement",
+            "Portfolio Statement",
+            "Investment Portfolio Summary",
+            "Investment Account Statement",
+            "Securities Statement",
+            "Investment Summary",
+            "Portfolio Overview",
+            "Investment Report",
+            "Wealth Statement",
+            "Asset Statement"
+        ],
+        "de": [
+            "Wertpapierabrechnung",
+            "Portfolioauszug",
+            "Depotauszug",
+            "Wertpapierdepotauszug",
+            "Anlageübersicht",
+            "Vermögensaufstellung",
+            "Depotübersicht"
+        ],
+        "fr": [
+            "Relevé d'investissement",
+            "Relevé de portefeuille",
+            "Résumé du portefeuille d'investissement",
+            "Relevé de titres",
+            "Relevé de compte-titres",
+            "Synthèse des investissements",
+            "État du portefeuille"
+        ],
+        "es": [
+            "Extracto de inversión",
+            "Extracto de cartera",
+            "Resumen de inversiones",
+            "Estado de inversiones",
+            "Extracto de valores",
+            "Resumen de cartera de inversión"
+        ],
+        "it": [
+            "Estratto conto investimenti",
+            "Estratto conto portafoglio",
+            "Estratto conto fondo pensione",
+            "Estratto conto titoli",
+            "Riepilogo investimenti",
+            "Sintesi portafoglio",
+            "Certificato di deposito",
+            "Piano di maturazione degli interessi",
+            "Rendimento totale alla scadenza"
+        ]
+    },
+    "garnishment": {
+        "en": [
+            "Garnishment Order",
+            "Wage Garnishment",
+            "Wage Withholding Order",
+            "Income Withholding Order",
+            "Earnings Withholding Order",
+            "Support Withholding Order",
+            "Child Support Withholding"
+        ],
+        "de": [
+            "Pfändungsbeschluss",
+            "Lohnpfändung",
+            "Pfändungs- und Einziehungsverfügung",
+            "Unterhaltspfändung",
+            "Lohnabzug",
+            "Pfändungsverfügung",
+            "Pfändungs- und Überweisungsbeschluss",
+            "Pfändung und Überweisung"
+        ],
+        "fr": [
+            "Ordre de saisie",
+            "Saisie sur salaire",
+            "Prélèvement sur salaire",
+            "Saisie-arrêt",
+            "Saisie des rémunérations",
+            "Prélèvement pour pension alimentaire"
+        ],
+        "es": [
+            "Orden de embargo",
+            "Embargo de salario",
+            "Retención de salario",
+            "Embargo de ingresos",
+            "Retención de ingresos",
+            "Embargo de pensión alimenticia"
+        ],
+        "it": [
+            "Ordine di pignoramento",
+            "Pignoramento dello stipendio",
+            "Trattenuta sullo stipendio",
+            "Pignoramento dei redditi",
+            "Trattenuta per mantenimento"
+        ]
+    },
+    "credit": {
+        "en": [
+            "Credit Card Statement",
+            "Card Statement",
+            "Monthly Credit Card Statement",
+            "Credit Card Summary",
+            "Card Account Statement",
+            "Credit Card Activity",
+            "Card Transaction Statement",
+            "Loan Agreement",
+            "Mortgage Agreement",
+            "Credit Agreement",
+            "Loan Statement",
+            "Term Deposit Notice",
+            "Term Deposit Renewal"
+        ],
+        "de": [
+            "Kreditkartenabrechnung",
+            "Kartenabrechnung",
+            "Hypothekendarlehensvertrag",
+            "Darlehenskonditionen",
+            "Immobiliendarlehen",
+            "Kreditvertrag",
+            "Darlehensvertrag",
+            "Festgeldmitteilung",
+            "Termineinlagenverlängerung"
+        ],
+        "fr": [
+            "Relevé de carte de crédit",
+            "Relevé de carte",
+            "Relevé mensuel carte de crédit",
+            "Résumé carte de crédit",
+            "Relevé des opérations carte de crédit",
+            "Contrat de prêt",
+            "Contrat hypothécaire",
+            "Convention de crédit",
+            "Approbation de prêt personnel",
+            "Avis de renouvellement de dépôt à terme",
+            "Dépôt à terme"
+        ],
+        "es": [
+            "Extracto de tarjeta de crédito",
+            "Extracto de tarjeta",
+            "Estado de cuenta de tarjeta de crédito",
+            "Resumen de tarjeta de crédito",
+            "Extracto mensual tarjeta de crédito",
+            "Movimientos tarjeta de crédito",
+            "Contrato de préstamo",
+            "Contrato hipotecario",
+            "Acuerdo de crédito",
+            "Contrato de tarjeta de crédito",
+            "Aviso de depósito a plazo",
+            "Renovación de depósito a plazo"
+        ],
+        "it": [
+            "Estratto conto carta di credito",
+            "Estratto conto carta",
+            "Estratto mensile carta di credito",
+            "Riepilogo carta di credito",
+            "Movimenti carta di credito",
+            "Contratto di mutuo",
+            "Contratto di prestito",
+            "Accordo di credito",
+            "Avviso di deposito a termine",
+            "Rinnovo del deposito a termine"
+        ]
+    }
+} 
