@@ -43,10 +43,10 @@ class QwenModel(BaseModel):
         
         
         self.model = Qwen2_5_VLForConditionalGeneration.from_pretrained(
-            "Qwen/Qwen2.5-VL-32B-Instruct",
+            "Qwen/Qwen2.5-VL-7B-Instruct",
             **model_kwargs
         )
-        self.processor = AutoProcessor.from_pretrained("Qwen/Qwen2.5-VL-32B-Instruct")
+        self.processor = AutoProcessor.from_pretrained("Qwen/Qwen2.5-VL-7B-Instruct")
         print("Model loaded successfully!")
 
     async def process_document(self, document: Dict[str, Any]) -> Dict[str, Any]:
