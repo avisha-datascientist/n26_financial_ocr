@@ -41,8 +41,6 @@ class QwenModel(BaseModel):
                 print("Flash Attention 2 not available, falling back to standard attention")
                 use_flash_attention = False
         
-        # Clear any existing cache
-        torch.mps.empty_cache()
         
         self.model = Qwen2_5_VLForConditionalGeneration.from_pretrained(
             "Qwen/Qwen2.5-VL-32B-Instruct",
@@ -63,8 +61,6 @@ class QwenModel(BaseModel):
         start_time = time.time()
         
         try:
-            # Clear memory before processing
-            torch.mps.empty_cache()
             
             # Create messages for the model using actual document content
             messages = [
@@ -128,9 +124,6 @@ class QwenModel(BaseModel):
 
             # Add processing time
             result["processing_time"] = time.time() - start_time
-            
-            # Clear memory before returning
-            torch.mps.empty_cache()
             
             return result
 
