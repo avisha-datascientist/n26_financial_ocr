@@ -52,34 +52,30 @@ async def run_benchmark(
     for doc in tqdm(documents, desc="Processing documents"):
         # Process with Mistral
         try:
-            mistral_prediction, mistral_time = await mistral_model.process_document(doc)
+            mistral_prediction = await mistral_model.process_document(doc)
             mistral_metrics = calculate_metrics(
                 prediction=mistral_prediction,
                 ground_truth=doc["ground_truth"],
-                processing_time=mistral_time,
                 content=doc["content"]
             )
             
             results["mistral"]["predictions"].append(mistral_prediction)
             results["mistral"]["metrics"].append(mistral_metrics)
-            results["mistral"]["processing_times"].append(mistral_time)
             
         except Exception as e:
             print(f"\nError processing document {doc['doc_id']} with Mistral: {str(e)}")
         
         # Process with Qwen
         try:
-            qwen_prediction, qwen_time = await qwen_model.process_document(doc)
+            qwen_prediction = await qwen_model.process_document(doc)
             qwen_metrics = calculate_metrics(
                 prediction=qwen_prediction,
                 ground_truth=doc["ground_truth"],
-                processing_time=qwen_time,
                 content=doc["content"]
             )
             
             results["qwen"]["predictions"].append(qwen_prediction)
             results["qwen"]["metrics"].append(qwen_metrics)
-            results["qwen"]["processing_times"].append(qwen_time)
             
         except Exception as e:
             print(f"\nError processing document {doc['doc_id']} with Qwen: {str(e)}")

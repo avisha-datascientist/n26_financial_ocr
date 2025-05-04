@@ -58,7 +58,17 @@ class QwenModel(BaseModel):
         Returns:
             Dictionary containing processing results
         """
-        start_time = time.time()
+        prompt = "You are a highly accurate Optical Character Recognition (OCR) and table extraction assistant. Given an image that contains a table (including scanned documents, photos of printed pages, screenshots, etc.), your task is to: \
+        1. Recognize and extract all the text in the image. \
+        2. Identify and interpret the tabular structure of the content, including: \
+        3. Row and column boundaries \
+        4. Header rows (if any) \
+        5. Merged or spanned cells \
+        6. Numerical and textual data \
+        7. Output the table in clean and readable Markdown format (or CSV if specified), preserving the correct structure and cell values. \
+        8. Handle cases where the table has borders or no borders, or if the text is slightly rotated or imperfectly aligned. \
+        9. If the table contains multiple sections or subtables, separate them clearly and label them accordingly (e.g., “Table 1”, “Table 2”). \
+        If any parts of the table are unclear or unreadable, indicate them using [[UNREADABLE]]."
         
         try:
             
@@ -69,9 +79,7 @@ class QwenModel(BaseModel):
                     "content": [
                         {
                             "type": "image",
-                            "image": "https://qianwen-res.oss-cn-beijing.aliyuncs.com/Qwen-VL/assets/demo.jpeg",
-                            "resized_height": 340,
-                            "resized_width": 340
+                            "image": '/content/' + document["image_path"]
                         },
                         {"type": "text", "text": "Describe the image in detail"},
                     ]
@@ -91,9 +99,7 @@ class QwenModel(BaseModel):
                 images=image_inputs,
                 videos=video_inputs,
                 padding=True,
-                return_tensors="pt",
-                truncation=True,  # Enable truncation
-                max_length=512  # Limit input length
+                return_tensors="pt"
             )
             print("after inputs")
             print("is cude", self.model.device)
@@ -113,28 +119,11 @@ class QwenModel(BaseModel):
             )[0]
             print(output_text)
             # Parse the output
-            try:
-                result = json.loads(output_text)
-            except json.JSONDecodeError:
-                result = {
-                    "document_type": "unknown",
-                    "language": "unknown",
-                    "key_information": output_text
-                }
-
-            # Add processing time
-            result["processing_time"] = time.time() - start_time
             
-            return result
+            return output_text
 
         except Exception as e:
-            print(f"Error processing document: {str(e)}")
-            return {
-                "document_type": "error",
-                "language": "error",
-                "key_information": f"Error: {str(e)}",
-                "processing_time": time.time() - start_time
-            }
+            return str(e)
 
     def _create_prompt(self, text: str) -> str:
         """Create a prompt for document processing.

@@ -43,7 +43,7 @@ class MistralModel(BaseModel):
         
         try:
             # Get the full image path
-            image_path = '/Users/avishabhiryani/Documents/private/N26_GenAI_Take_Home_Assignment/' + document["image_path"]
+            image_path = '/content/' + document["image_path"]
             
             # Encode the image to base64
             base64_image = self._encode_image(image_path)
@@ -61,26 +61,10 @@ class MistralModel(BaseModel):
             combined_markdown = "\n\n".join(page.markdown for page in ocr_response.pages)
             
             # Return the raw OCR result in the expected format
-            return {
-                "document_type": "unknown",  # Will be determined by the evaluation
-                "language": "unknown",  # Will be determined by the evaluation
-                "key_information": {
-                    "raw_text": combined_markdown
-                },
-                "confidence_score": 1.0,  # Since this is direct OCR output
-                "processing_time": time.time() - start_time,
-                "error": None
-            }
+            return combined_markdown
                 
         except Exception as e:
-            return {
-                "document_type": "error",
-                "language": "error",
-                "key_information": {},
-                "confidence_score": 0.0,
-                "processing_time": time.time() - start_time,
-                "error": str(e)
-            }
+            return str(e)
 
     def _create_prompt(self, text: str) -> str:
         """Create a prompt for document processing."""
