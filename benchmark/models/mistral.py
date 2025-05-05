@@ -1,6 +1,5 @@
 from typing import Dict, Any
 import json
-import time
 import os
 import base64
 from mistralai import Mistral
@@ -23,7 +22,7 @@ class MistralModel(BaseModel):
         except Exception as e:
             raise Exception(f"Error encoding image: {str(e)}")
 
-    async def process_document(self, document: Dict[str, Any]) -> Dict[str, Any]:
+    async def process_document(self, document: Dict[str, Any]) -> str:
         """Process a document using Mistral OCR model.
         
         Args:
@@ -31,15 +30,8 @@ class MistralModel(BaseModel):
                 - image_path: Path to the document image
                 
         Returns:
-            Dictionary containing:
-                - document_type: Type of document
-                - language: Document language
-                - key_information: Extracted information
-                - confidence_score: Confidence in the extraction
-                - processing_time: Time taken to process
-                - error: Any error message if processing failed
+            String containing the extracted key details
         """
-        start_time = time.time()
         
         try:
             # Get the full image path
@@ -60,11 +52,43 @@ class MistralModel(BaseModel):
             # Combine markdown from all pages
             combined_markdown = "\n\n".join(page.markdown for page in ocr_response.pages)
             
-            # Return the raw OCR result in the expected format
-            return combined_markdown
+            # Postprocess to extract key details
+            key_details = await self._extract_key_details(combined_markdown)
+            
+            return key_details
                 
         except Exception as e:
             return str(e)
+
+    async def _extract_key_details(self, text: str) -> str:
+        """Extract key details from the document text and organize them into bullet points.
+        
+        Args:
+            text: The combined markdown text from OCR
+            
+        Returns:
+            String containing organized bullet points of key details
+        """
+        try:
+            # Create prompt for key details extraction
+            prompt = f"""**Key Details**: Extract all the important and readable information from the document and organize it into clear and concise bullet points.
+
+            Document text:
+            {text}"""
+
+            # Make API call to get key details
+            chat_response = self.client.chat.complete(
+                model="mistral-large-latest",
+                messages=[
+                    {"role": "user", "content": prompt}
+                ]
+            )
+            
+            # Return the response content
+            return chat_response.choices[0].message.content
+            
+        except Exception as e:
+            return f"Error extracting key details: {str(e)}"
 
     def _create_prompt(self, text: str) -> str:
         """Create a prompt for document processing."""

@@ -49,30 +49,28 @@ class QwenModel(BaseModel):
         self.processor = AutoProcessor.from_pretrained("Qwen/Qwen2.5-VL-7B-Instruct")
         print("Model loaded successfully!")
 
-    async def process_document(self, document: Dict[str, Any]) -> Dict[str, Any]:
+    async def process_document(self, document: Dict[str, Any]) -> str:
         """Process a document using Qwen model.
         
         Args:
             document: Document to process with image path and text
             
         Returns:
-            Dictionary containing processing results
+            String containing extracted key details
         """
-        prompt = "You are a highly accurate Optical Character Recognition (OCR) and table extraction assistant. Given an image that contains a table (including scanned documents, photos of printed pages, screenshots, etc.), your task is to: \
-        1. Recognize and extract all the text in the image. \
-        2. Identify and interpret the tabular structure of the content, including: \
-        3. Row and column boundaries \
-        4. Header rows (if any) \
-        5. Merged or spanned cells \
-        6. Numerical and textual data \
-        7. Output the table in clean and readable Markdown format (or CSV if specified), preserving the correct structure and cell values. \
-        8. Handle cases where the table has borders or no borders, or if the text is slightly rotated or imperfectly aligned. \
-        9. If the table contains multiple sections or subtables, separate them clearly and label them accordingly (e.g., “Table 1”, “Table 2”). \
-        If any parts of the table are unclear or unreadable, indicate them using [[UNREADABLE]]."
+        # First prompt to extract table in markdown format
+        table_prompt = """You are a highly accurate Optical Character Recognition (OCR) and table extraction assistant. Given an image that contains a table (including scanned documents, photos of printed pages, screenshots, etc.), your task is to:
+
+1. Recognize and extract all the text in the image
+2. Identify and interpret the tabular structure of the content
+3. Output the table in clean and readable Markdown format, preserving the correct structure and cell values
+4. Handle cases where the table has borders or no borders
+5. If any parts of the table are unclear or unreadable, indicate them using [[UNREADABLE]]
+
+Please return ONLY the markdown table, nothing else."""
         
         try:
-            
-            # Create messages for the model using actual document content
+            # First call to get the table in markdown format
             messages = [
                 {
                     "role": "user",
@@ -81,19 +79,16 @@ class QwenModel(BaseModel):
                             "type": "image",
                             "image": '/content/' + document["image_path"]
                         },
-                        {"type": "text", "text": "Describe the image in detail"},
+                        {"type": "text", "text": table_prompt},
                     ]
                 }
             ]
-            print("after messages")
 
-            # Prepare inputs
+            # Prepare inputs for table extraction
             text = self.processor.apply_chat_template(
                 messages, tokenize=False, add_generation_prompt=True
             )
-            print("after text")
             image_inputs, video_inputs = process_vision_info(messages)
-            print("after image_inputs")
             inputs = self.processor(
                 text=[text],
                 images=image_inputs,
@@ -101,29 +96,56 @@ class QwenModel(BaseModel):
                 padding=True,
                 return_tensors="pt"
             )
-            print("after inputs")
-            print("is cude", self.model.device)
             inputs = inputs.to(self.model.device)
-            print("after inputs to device")
-            # Generate output
-            generated_ids = self.model.generate(**inputs, max_new_tokens=120)
-            print("after generate")
-            print(generated_ids)
+            
+            # Generate table output
+            generated_ids = self.model.generate(**inputs, max_new_tokens=512)
             generated_ids_trimmed = [
                 out_ids[len(in_ids):] for in_ids, out_ids in zip(inputs.input_ids, generated_ids)
             ]
-            print("after generated_ids_trimmed")
-            print(generated_ids_trimmed)
-            output_text = self.processor.batch_decode(
+            table_text = self.processor.batch_decode(
                 generated_ids_trimmed, skip_special_tokens=True, clean_up_tokenization_spaces=False
             )[0]
-            print(output_text)
-            # Parse the output
+
+            # Second prompt to extract key details from the table
+            key_details_prompt = f"""**Key Details**: Extract all the important and readable information from the table and organize it into clear and concise bullet points.
+
+Table:
+{table_text}"""
+
+            # Prepare inputs for key details extraction
+            messages = [
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": key_details_prompt},
+                    ]
+                }
+            ]
+
+            text = self.processor.apply_chat_template(
+                messages, tokenize=False, add_generation_prompt=True
+            )
+            inputs = self.processor(
+                text=[text],
+                padding=True,
+                return_tensors="pt"
+            )
+            inputs = inputs.to(self.model.device)
             
-            return output_text
+            # Generate key details output
+            generated_ids = self.model.generate(**inputs, max_new_tokens=256)
+            generated_ids_trimmed = [
+                out_ids[len(in_ids):] for in_ids, out_ids in zip(inputs.input_ids, generated_ids)
+            ]
+            key_details = self.processor.batch_decode(
+                generated_ids_trimmed, skip_special_tokens=True, clean_up_tokenization_spaces=False
+            )[0]
+
+            return key_details
 
         except Exception as e:
-            return str(e)
+            return f"Error processing document: {str(e)}"
 
     def _create_prompt(self, text: str) -> str:
         """Create a prompt for document processing.

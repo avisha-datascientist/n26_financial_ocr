@@ -6,43 +6,40 @@ from datetime import datetime
 from pathlib import Path
 
 class BenchmarkVisualizer:
-    def __init__(self, output_dir: str = "benchmark_results"):
+    def __init__(self, output_dir: str):
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(parents=True, exist_ok=True)
         self.timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
     def save_results(self, results: Dict):
         """Save benchmark results to JSON file"""
-        output_file = self.output_dir / f"benchmark_results_{self.timestamp}.json"
+        # Convert metrics objects to dictionaries
+        for model in ["mistral", "qwen"]:
+            results[model]["metrics"] = [m.to_dict() for m in results[model]["metrics"]]
+        
+        output_file = self.output_dir / f"results_{self.timestamp}.json"
         with open(output_file, "w") as f:
             json.dump(results, f, indent=2)
 
-    def plot_metrics_comparison(self, model_metrics: Dict[str, List[float]], metric_names: List[str]):
-        """Create bar plot comparing metrics across models"""
-        df = pd.DataFrame(model_metrics, index=metric_names)
-        
-        plt.figure(figsize=(10, 6))
-        df.plot(kind="bar")
-        plt.title("Model Performance Comparison")
-        plt.xlabel("Metrics")
-        plt.ylabel("Score")
-        plt.legend(title="Models")
-        plt.tight_layout()
-        
-        plt.savefig(self.output_dir / f"metrics_comparison_{self.timestamp}.png")
-        plt.close()
+    def plot_metrics_comparison(self, metrics_data: Dict[str, List[Dict[str, float]]], metrics: List[str]):
+        """Plot comparison of metrics between models."""
+        fig, axes = plt.subplots(len(metrics), 1, figsize=(10, 5 * len(metrics)))
+        if len(metrics) == 1:
+            axes = [axes]
 
-    def plot_processing_times(self, processing_times: Dict[str, List[float]]):
-        """Create box plot of processing times"""
-        plt.figure(figsize=(8, 6))
-        plt.boxplot(processing_times.values(), labels=processing_times.keys())
-        plt.title("Processing Time Distribution")
-        plt.xlabel("Models")
-        plt.ylabel("Time (seconds)")
-        plt.xticks(rotation=45)
-        plt.tight_layout()
+        for ax, metric in zip(axes, metrics):
+            data = []
+            labels = []
+            for model, model_metrics in metrics_data.items():
+                data.append([m[metric] for m in model_metrics])
+                labels.append(model)
+            
+            ax.boxplot(data, labels=labels)
+            ax.set_title(f"{metric.replace('_', ' ').title()}")
+            ax.set_ylabel("Score")
         
-        plt.savefig(self.output_dir / f"processing_times_{self.timestamp}.png")
+        plt.tight_layout()
+        plt.savefig(self.output_dir / f"metrics_comparison_{self.timestamp}.png")
         plt.close()
 
     def plot_language_performance(self, language_scores: Dict[str, Dict[str, float]]):

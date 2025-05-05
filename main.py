@@ -21,7 +21,7 @@ async def run_benchmark(
     dataset = BenchmarkDataset(num_samples=num_samples)
     mistral_model = MistralModel(api_key='vh6EK34LkmpEkBjvXsuVG84v1Sh4O0tu')
     qwen_model = QwenModel()  # No API key needed for Qwen
-    visualizer = BenchmarkVisualizer(output_dir='/Users/avishabhiryani/Documents/private/N26_GenAI_Take_Home_Assignment/benchmark/results')
+    visualizer = BenchmarkVisualizer(output_dir=output_dir)
     
     # Load dataset
     print("\nLoading and processing dataset...")
@@ -32,13 +32,11 @@ async def run_benchmark(
     results = {
         "mistral": {
             "predictions": [],
-            "metrics": [],
-            "processing_times": []
+            "metrics": []
         },
         "qwen": {
             "predictions": [],
-            "metrics": [],
-            "processing_times": []
+            "metrics": []
         },
         "metadata": {
             "timestamp": datetime.now().isoformat(),
@@ -52,14 +50,14 @@ async def run_benchmark(
     for doc in tqdm(documents, desc="Processing documents"):
         # Process with Mistral
         try:
-            mistral_prediction = await mistral_model.process_document(doc)
+            mistral_result = await mistral_model.process_document(doc)
+            
             mistral_metrics = calculate_metrics(
-                prediction=mistral_prediction,
-                ground_truth=doc["ground_truth"],
-                content=doc["content"]
+                prediction=mistral_result,
+                ground_truth=doc["key_details"]
             )
             
-            results["mistral"]["predictions"].append(mistral_prediction)
+            results["mistral"]["predictions"].append(mistral_result)
             results["mistral"]["metrics"].append(mistral_metrics)
             
         except Exception as e:
@@ -67,14 +65,14 @@ async def run_benchmark(
         
         # Process with Qwen
         try:
-            qwen_prediction = await qwen_model.process_document(doc)
+            qwen_result = await qwen_model.process_document(doc)
+            
             qwen_metrics = calculate_metrics(
-                prediction=qwen_prediction,
-                ground_truth=doc["ground_truth"],
-                content=doc["content"]
+                prediction=qwen_result,
+                ground_truth=doc["key_details"]
             )
             
-            results["qwen"]["predictions"].append(qwen_prediction)
+            results["qwen"]["predictions"].append(qwen_result)
             results["qwen"]["metrics"].append(qwen_metrics)
             
         except Exception as e:
@@ -94,13 +92,8 @@ async def run_benchmark(
             "Mistral": [m.to_dict() for m in results["mistral"]["metrics"]],
             "Qwen": [m.to_dict() for m in results["qwen"]["metrics"]]
         },
-        ["accuracy", "completeness", "format_adherence", "language_handling", "processing_time"]
+        ["key_details_accuracy", "key_details_completeness", "key_details_relevance"]
     )
-    
-    visualizer.plot_processing_times({
-        "Mistral": results["mistral"]["processing_times"],
-        "Qwen": results["qwen"]["processing_times"]
-    })
     
     # Print summary
     print("\nBenchmark Summary:")
@@ -116,7 +109,6 @@ async def run_benchmark(
     return results
 
 if __name__ == "__main__":
-    # Load Mistral API key from environment variable
     # Run benchmark
     asyncio.run(run_benchmark(
         num_samples=2,  # Number of documents to process
