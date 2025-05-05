@@ -1,5 +1,5 @@
 import asyncio
-from preprocessing import DocumentPreprocessor
+from pipeline.preprocessor import DocumentPreprocessor
 from benchmark.models.qwen import QwenModel
 
 async def test_preprocessing():

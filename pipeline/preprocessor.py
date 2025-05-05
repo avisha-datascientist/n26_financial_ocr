@@ -1,7 +1,9 @@
 from typing import Dict, Any, Tuple
 import json
+import os
 from pathlib import Path
 from benchmark.models.qwen import QwenModel
+from pdf2image import convert_from_path
 
 class DocumentPreprocessor:
     def __init__(self, model: QwenModel):
@@ -17,6 +19,22 @@ class DocumentPreprocessor:
         """Load document keywords from JSON file."""
         with open("/Users/avishabhiryani/Documents/private/N26_GenAI_Take_Home_Assignment/document_keywords.json", "r", encoding="utf-8") as f:
             return json.load(f)
+
+    def _load_pdf_to_image(self, pdf_path: str) -> List[str]:
+        """Load the PDF and convert it to an image."""
+        # Path to your PDF file
+        doc_name = os.path.splitext(os.path.basename(pdf_path))[0]
+        # Convert PDF to list of images (one per page)
+        images = convert_from_path(pdf_path)
+
+        output_dir = "/content/n26_financial_ocr/pipeline/docs_images"
+        all_image_paths = []
+        # Save each page as an image file
+        for i, image in enumerate(images):
+            image_path = os.path.join(output_dir, f'{doc_name}_page_{i + 1}.jpeg')
+            image.save(image_path, 'JPEG')
+            all_image_paths.append(image_path)
+        return all_image_paths
             
     def _create_preprocessing_prompt(self, document_path: str) -> str:
         """Create the prompt for preprocessing step.
@@ -74,7 +92,8 @@ class DocumentPreprocessor:
             - detected_language: ISO language code
             - document_type: Classified document type
         """
-        prompt = self._create_preprocessing_prompt(document_path)
+        image_paths = self._load_pdf_to_image(document_path)
+        prompt = self._create_preprocessing_prompt(image_paths[0])
         
         # Process document using Qwen model
         result = await self.model.process_document(document_path, prompt)
