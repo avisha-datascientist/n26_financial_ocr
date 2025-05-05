@@ -112,5 +112,5 @@ if __name__ == "__main__":
     # Run benchmark
     asyncio.run(run_benchmark(
         num_samples=2,  # Number of documents to process
-        output_dir="benchmark_results"  # Output directory for results
+        output_dir="/content/n26_financial_ocr/benchmark/results"  # Output directory for results
     )) 

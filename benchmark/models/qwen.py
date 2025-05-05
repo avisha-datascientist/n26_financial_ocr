@@ -15,7 +15,7 @@ class QwenModel(BaseModel):
             device: Device to run the model on ("auto", "cuda", "cpu")
             use_flash_attention: Whether to use Flash Attention 2 (requires flash-attn package)
         """
-        print("Loading Qwen model Qwen/Qwen2.5-VL-7B-Instruct...")  # Using 7B instead of 32B
+        print("Loading Qwen model Qwen/Qwen2.5-VL-32B-Instruct...")  # Using 7B instead of 32B
         
         # Configure 4-bit quantization
         quantization_config = BitsAndBytesConfig(
@@ -43,10 +43,10 @@ class QwenModel(BaseModel):
         
         
         self.model = Qwen2_5_VLForConditionalGeneration.from_pretrained(
-            "Qwen/Qwen2.5-VL-7B-Instruct",
+            "Qwen/Qwen2.5-VL-32B-Instruct",
             **model_kwargs
         )
-        self.processor = AutoProcessor.from_pretrained("Qwen/Qwen2.5-VL-7B-Instruct")
+        self.processor = AutoProcessor.from_pretrained("Qwen/Qwen2.5-VL-32B-Instruct")
         print("Model loaded successfully!")
 
     async def process_document(self, document: Dict[str, Any]) -> str:
@@ -61,13 +61,13 @@ class QwenModel(BaseModel):
         # First prompt to extract table in markdown format
         table_prompt = """You are a highly accurate Optical Character Recognition (OCR) and table extraction assistant. Given an image that contains a table (including scanned documents, photos of printed pages, screenshots, etc.), your task is to:
 
-1. Recognize and extract all the text in the image
-2. Identify and interpret the tabular structure of the content
-3. Output the table in clean and readable Markdown format, preserving the correct structure and cell values
-4. Handle cases where the table has borders or no borders
-5. If any parts of the table are unclear or unreadable, indicate them using [[UNREADABLE]]
+        1. Recognize and extract all the text in the image
+        2. Identify and interpret the tabular structure of the content
+        3. Output the table in clean and readable Markdown format, preserving the correct structure and cell values
+        4. Handle cases where the table has borders or no borders
+        5. If any parts of the table are unclear or unreadable, indicate them using [[UNREADABLE]]
 
-Please return ONLY the markdown table, nothing else."""
+        Please return ONLY the markdown table, nothing else."""
         
         try:
             # First call to get the table in markdown format
@@ -105,13 +105,13 @@ Please return ONLY the markdown table, nothing else."""
             ]
             table_text = self.processor.batch_decode(
                 generated_ids_trimmed, skip_special_tokens=True, clean_up_tokenization_spaces=False
-            )[0]
+            )
 
             # Second prompt to extract key details from the table
             key_details_prompt = f"""**Key Details**: Extract all the important and readable information from the table and organize it into clear and concise bullet points.
-
-Table:
-{table_text}"""
+            Return information in bullet points only, nothing else.
+            Table:
+            {table_text}"""
 
             # Prepare inputs for key details extraction
             messages = [
@@ -134,13 +134,13 @@ Table:
             inputs = inputs.to(self.model.device)
             
             # Generate key details output
-            generated_ids = self.model.generate(**inputs, max_new_tokens=256)
+            generated_ids = self.model.generate(**inputs, max_new_tokens=512)
             generated_ids_trimmed = [
                 out_ids[len(in_ids):] for in_ids, out_ids in zip(inputs.input_ids, generated_ids)
             ]
             key_details = self.processor.batch_decode(
                 generated_ids_trimmed, skip_special_tokens=True, clean_up_tokenization_spaces=False
-            )[0]
+            )
 
             return key_details
 
