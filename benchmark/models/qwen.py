@@ -49,7 +49,7 @@ class QwenModel(BaseModel):
         self.processor = AutoProcessor.from_pretrained("Qwen/Qwen2.5-VL-32B-Instruct")
         print("Model loaded successfully!")
 
-    async def process_document(self, document: Dict[str, Any]) -> str:
+    async def process_document(self, document: Union[str, Dict[str, Any]], prompt: str = None) -> str:
         """Process a document using Qwen model.
         
         Args:
@@ -59,19 +59,39 @@ class QwenModel(BaseModel):
             String containing extracted key details
         """
         # First prompt to extract table in markdown format
-        table_prompt = """You are a highly accurate Optical Character Recognition (OCR) and table extraction assistant. Given an image that contains a table (including scanned documents, photos of printed pages, screenshots, etc.), your task is to:
+        table_prompt = """You are a highly accurate Optical Character Recognition (OCR) and text and table extraction assistant. Given an image that contains a text and table or tables (including scanned documents, photos of printed pages, screenshots, etc.), your task is to:\
 
-        1. Recognize and extract all the text in the image
-        2. Identify and interpret the tabular structure of the content
-        3. Output the table in clean and readable Markdown format, preserving the correct structure and cell values
-        4. Handle cases where the table has borders or no borders
-        5. If any parts of the table are unclear or unreadable, indicate them using [[UNREADABLE]]
+        1. Visually understand the structure of the document, identifying all relevant blocks such as headers, sender/client info, tables, and totals\
+        2. Extract and summarize all key information into a clean, readable list of bullet point\
+        3. Organize the bullet points into meaningful categories\
+        4. Follow this formatting guideline for the output:\
+            -- Use plain text bullet points (with -)\
+            -- Use bold labels (with **) for key-value style fields\
+            -- For line items or repeating entries, describe them briefly rather than listing all rows unless necessary\
+            -- Do not return raw tables or Markdown — return a summary in clean bullet points\
 
-        Please return ONLY the markdown table, nothing else."""
+        5. Do not include any explanations, notes, or OCR artifacts. Only return the final structured summary.
+
+        """
         
         try:
-            # First call to get the table in markdown format
-            messages = [
+
+            if prompt:
+                messages = [
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "image",
+                            "image": document
+                        },
+                        {"type": "text", "text": prompt},
+                    ]
+                }
+            ]
+            else:
+                prompt = table_prompt
+                 messages = [
                 {
                     "role": "user",
                     "content": [
@@ -79,7 +99,7 @@ class QwenModel(BaseModel):
                             "type": "image",
                             "image": '/content/' + document["image_path"]
                         },
-                        {"type": "text", "text": table_prompt},
+                        {"type": "text", "text": prompt},
                     ]
                 }
             ]
@@ -107,45 +127,52 @@ class QwenModel(BaseModel):
                 generated_ids_trimmed, skip_special_tokens=True, clean_up_tokenization_spaces=False
             )
 
-            # Second prompt to extract key details from the table
-            key_details_prompt = f"""**Key Details**: Extract all the important and readable information from the table and organize it into clear and concise bullet points.
-            Return information in bullet points only, nothing else.
-            Table:
-            {table_text}"""
+            # for benchmark purposes only
+            #key_details = self._extract_key_details(table_text)
 
-            # Prepare inputs for key details extraction
-            messages = [
-                {
-                    "role": "user",
-                    "content": [
-                        {"type": "text", "text": key_details_prompt},
-                    ]
-                }
-            ]
-
-            text = self.processor.apply_chat_template(
-                messages, tokenize=False, add_generation_prompt=True
-            )
-            inputs = self.processor(
-                text=[text],
-                padding=True,
-                return_tensors="pt"
-            )
-            inputs = inputs.to(self.model.device)
-            
-            # Generate key details output
-            generated_ids = self.model.generate(**inputs, max_new_tokens=512)
-            generated_ids_trimmed = [
-                out_ids[len(in_ids):] for in_ids, out_ids in zip(inputs.input_ids, generated_ids)
-            ]
-            key_details = self.processor.batch_decode(
-                generated_ids_trimmed, skip_special_tokens=True, clean_up_tokenization_spaces=False
-            )
-
-            return key_details
+            return table_text
 
         except Exception as e:
             return f"Error processing document: {str(e)}"
+
+    def _extract_key_details(self, table_text: str) -> str:
+
+        # Second prompt to extract key details from the table
+        key_details_prompt = f"""**Key Details**: Extract all the important and readable information from the table and organize it into clear and concise bullet points.
+        Return information in bullet points only, nothing else.
+        Table:
+        {table_text}"""
+
+        # Prepare inputs for key details extraction
+        messages = [
+            {
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": key_details_prompt},
+                ]
+            }
+        ]
+
+        text = self.processor.apply_chat_template(
+            messages, tokenize=False, add_generation_prompt=True
+        )
+        inputs = self.processor(
+            text=[text],
+            padding=True,
+            return_tensors="pt"
+        )
+        inputs = inputs.to(self.model.device)
+        
+        # Generate key details output
+        generated_ids = self.model.generate(**inputs, max_new_tokens=512)
+        generated_ids_trimmed = [
+            out_ids[len(in_ids):] for in_ids, out_ids in zip(inputs.input_ids, generated_ids)
+        ]
+        key_details = self.processor.batch_decode(
+            generated_ids_trimmed, skip_special_tokens=True, clean_up_tokenization_spaces=False
+        )
+
+        return key_details
 
     def _create_prompt(self, text: str) -> str:
         """Create a prompt for document processing.

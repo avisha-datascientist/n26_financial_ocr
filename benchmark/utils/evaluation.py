@@ -2,7 +2,7 @@ from typing import Dict, List, Optional
 import json
 from benchmark.config.metrics import EvaluationMetrics, MetricsConfig
 
-def evaluate_key_details_accuracy(prediction: str, ground_truth: str) -> float:
+def evaluate_key_details_accuracy(prediction: str, ground_truth: str, use_embeddings: bool = False) -> float:
     """Evaluate accuracy of key details extraction"""
     if not prediction or not ground_truth:
         return 0.0
@@ -22,7 +22,10 @@ def evaluate_key_details_accuracy(prediction: str, ground_truth: str) -> float:
              MetricsConfig._normalize_text(true_point))
             for pred_point in pred_points
         )
-        total_accuracy += MetricsConfig._calculate_similarity(best_match[0], best_match[1])
+        if use_embeddings:
+            total_accuracy += MetricsConfig._calculate_embedding_similarity(best_match[0], best_match[1])
+        else:
+            total_accuracy += MetricsConfig._calculate_similarity(best_match[0], best_match[1])
     
     return total_accuracy / len(true_points)
 
@@ -31,13 +34,14 @@ def evaluate_key_details_completeness(prediction: str, ground_truth: str) -> flo
     if not prediction or not ground_truth:
         return 0.0
     
-    # Count bullet points
+    # Count bullet points in prediction and ground truth
     pred_points = MetricsConfig._count_bullet_points(prediction)
     true_points = MetricsConfig._count_bullet_points(ground_truth)
     
     if true_points == 0:
         return 1.0  # If no ground truth points, consider it complete
     
+    # Calculate completeness as ratio of points found
     return min(pred_points / true_points, 1.0)
 
 def evaluate_key_details_relevance(prediction: str, ground_truth: str) -> float:
@@ -68,12 +72,13 @@ def evaluate_key_details_relevance(prediction: str, ground_truth: str) -> float:
 
 def calculate_metrics(
     prediction: str,
-    ground_truth: str
+    ground_truth: str,
+    use_embeddings: bool = False
 ) -> EvaluationMetrics:
     """Calculate all evaluation metrics for key details extraction"""
     
     # Calculate individual metrics
-    accuracy = evaluate_key_details_accuracy(prediction, ground_truth)
+    accuracy = evaluate_key_details_accuracy(prediction, ground_truth, use_embeddings)
     completeness = evaluate_key_details_completeness(prediction, ground_truth)
     relevance = evaluate_key_details_relevance(prediction, ground_truth)
     
@@ -81,7 +86,8 @@ def calculate_metrics(
     metrics = EvaluationMetrics(
         key_details_accuracy=accuracy * 100,  # Convert to percentage
         key_details_completeness=completeness * 100,
-        key_details_relevance=relevance * 100
+        key_details_relevance=relevance * 100,
+        embedding_accuracy=accuracy * 100 if use_embeddings else None  # Set embedding accuracy if requested
     )
     
     return metrics
@@ -99,5 +105,11 @@ def aggregate_metrics(metrics_list: List[EvaluationMetrics]) -> Dict[str, float]
             MetricsConfig.calculate_weighted_score(m) for m in metrics_list
         ) / len(metrics_list)
     }
+    
+    # Add embedding accuracy if available
+    if metrics_list[0].embedding_accuracy is not None:
+        aggregated["embedding_accuracy_mean"] = sum(
+            m.embedding_accuracy for m in metrics_list
+        ) / len(metrics_list)
     
     return aggregated 

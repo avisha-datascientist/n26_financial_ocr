@@ -54,7 +54,8 @@ async def run_benchmark(
             
             mistral_metrics = calculate_metrics(
                 prediction=mistral_result,
-                ground_truth=doc["key_details"]
+                ground_truth=doc["key_details"],
+                use_embeddings=True  # Enable embedding-based similarity for benchmarking
             )
             
             results["mistral"]["predictions"].append(mistral_result)
@@ -69,7 +70,8 @@ async def run_benchmark(
             
             qwen_metrics = calculate_metrics(
                 prediction=qwen_result,
-                ground_truth=doc["key_details"]
+                ground_truth=doc["key_details"],
+                use_embeddings=True  # Enable embedding-based similarity for benchmarking
             )
             
             results["qwen"]["predictions"].append(qwen_result)
@@ -92,7 +94,7 @@ async def run_benchmark(
             "Mistral": [m.to_dict() for m in results["mistral"]["metrics"]],
             "Qwen": [m.to_dict() for m in results["qwen"]["metrics"]]
         },
-        ["key_details_accuracy", "key_details_completeness", "key_details_relevance"]
+        ["key_details_accuracy", "key_details_completeness", "key_details_relevance", "embedding_accuracy"]
     )
     
     # Print summary

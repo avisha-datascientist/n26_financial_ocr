@@ -1,0 +1,164 @@
+from typing import Dict, Any, List
+import json
+from datetime import datetime
+import re
+from pathlib import Path
+
+class DocumentPostprocessor:
+    def __init__(self):
+        """Initialize the document postprocessor."""
+        self.date_formats = {
+            'en': ['%Y-%m-%d', '%d/%m/%Y', '%m/%d/%Y', '%B %d, %Y'],
+            'de': ['%d.%m.%Y', '%Y-%m-%d', '%d. %B %Y'],
+            'fr': ['%d/%m/%Y', '%Y-%m-%d', '%d %B %Y'],
+            'es': ['%d/%m/%Y', '%Y-%m-%d', '%d de %B de %Y'],
+            'it': ['%d/%m/%Y', '%Y-%m-%d', '%d %B %Y']
+        }
+        
+    def _format_date(self, date_str: str, language: str) -> str:
+        """Format date string according to language-specific rules.
+        
+        Args:
+            date_str: Date string to format
+            language: Language code for formatting rules
+            
+        Returns:
+            Formatted date string
+        """
+        if not date_str:
+            return date_str
+            
+        # Try to parse the date using various formats
+        for fmt in self.date_formats.get(language, self.date_formats['en']):
+            try:
+                date = datetime.strptime(date_str, fmt)
+                return date.strftime(fmt)  # Return in original format
+            except ValueError:
+                continue
+        return date_str  # Return original if parsing fails
+        
+    def _format_amount(self, amount_str: str) -> str:
+        """Format monetary amount string.
+        
+        Args:
+            amount_str: Amount string to format
+            
+        Returns:
+            Formatted amount string
+        """
+        if not amount_str:
+            return amount_str
+            
+        # Extract currency symbol and amount
+        currency_match = re.search(r'([€$£])\s*([\d,.]+)', amount_str)
+        if currency_match:
+            currency = currency_match.group(1)
+            amount = currency_match.group(2)
+            # Format amount with thousands separator and decimal point
+            try:
+                amount = float(amount.replace(',', ''))
+                return f"{currency}{amount:,.2f}"
+            except ValueError:
+                return amount_str
+        return amount_str
+        
+    def _format_name(self, name_str: str) -> str:
+        """Format name string preserving original capitalization.
+        
+        Args:
+            name_str: Name string to format
+            
+        Returns:
+            Formatted name string
+        """
+        if not name_str:
+            return name_str
+        return name_str.strip()
+        
+    def _format_address(self, address_str: str) -> str:
+        """Format address string preserving original formatting.
+        
+        Args:
+            address_str: Address string to format
+            
+        Returns:
+            Formatted address string
+        """
+        if not address_str:
+            return address_str
+        return address_str.strip()
+        
+    def postprocess_fields(self, fields: Dict[str, Any], language: str) -> Dict[str, Any]:
+        """Postprocess extracted fields with proper formatting.
+        
+        Args:
+            fields: Dictionary of extracted fields
+            language: Language code for formatting rules
+            
+        Returns:
+            Dictionary of formatted fields
+        """
+        formatted_fields = {}
+        
+        for field, value in fields.items():
+            if value is None:
+                formatted_fields[field] = None
+                continue
+                
+            # Apply appropriate formatting based on field type
+            if any(keyword in field.lower() for keyword in ['date', 'datum', 'fecha', 'data']):
+                formatted_fields[field] = self._format_date(value, language)
+            elif any(keyword in field.lower() for keyword in ['amount', 'betrag', 'importe', 'importo']):
+                formatted_fields[field] = self._format_amount(value)
+            elif any(keyword in field.lower() for keyword in ['name', 'nombre', 'nome']):
+                formatted_fields[field] = self._format_name(value)
+            elif any(keyword in field.lower() for keyword in ['address', 'adresse', 'dirección', 'indirizzo']):
+                formatted_fields[field] = self._format_address(value)
+            else:
+                formatted_fields[field] = value
+                
+        return formatted_fields
+        
+    def present_results(self, results: Dict[str, Any]) -> str:
+        """Present processing results in a readable format.
+        
+        Args:
+            results: Dictionary containing processing results
+            
+        Returns:
+            Formatted string presentation of results
+        """
+        output = []
+        output.append("=" * 50)
+        output.append("Document Processing Results")
+        output.append("=" * 50)
+        output.append(f"Document Type: {results['document_type']}")
+        output.append(f"Language: {results['language']}")
+        output.append(f"Confidence Score: {results['confidence_score']:.2f}")
+        output.append("\nExtracted Fields:")
+        output.append("-" * 50)
+        
+        for field, value in results['fields'].items():
+            if value is None:
+                output.append(f"{field}: Not found")
+            else:
+                output.append(f"{field}: {value}")
+                
+        output.append("=" * 50)
+        return "\n".join(output)
+        
+    def save_results(self, results: Dict[str, Any], output_path: str) -> None:
+        """Save processing results to a file.
+        
+        Args:
+            results: Dictionary containing processing results
+            output_path: Path to save the results
+        """
+        # Save formatted presentation
+        with open(output_path, 'w', encoding='utf-8') as f:
+            f.write(self.present_results(results))
+            
+        # Save raw JSON data
+        json_path = Path(output_path).with_suffix('.json')
+        with open(json_path, 'w', encoding='utf-8') as f:
+            json.dump(results, f, indent=2, ensure_ascii=False) 
