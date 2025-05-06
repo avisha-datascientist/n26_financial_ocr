@@ -111,10 +111,22 @@ class DocumentPreprocessor:
             - document_type: Classified document type
             - confidence_score: Confidence in classification
         """
+        image_paths = self._load_pdf_to_image(document_path)
+
+        # Process each page sequentially
+        #for image_path in image_paths:
+        #    page_text = await self.model.process_document(image_path, extraction_prompt)
+        #    if page_text:
+        #        all_extracted_text.append(page_text)
+        
+        # Combine text from all pages
+        #extracted_text = "\n\n".join(all_extracted_text)
+
+
         # Step 1: Extract text from the document
         extraction_prompt = self._create_extraction_prompt()
-        extracted_text = await self.model.process_document(document_path, extraction_prompt)
-        
+        extracted_text = await self.model.process_document(image_paths[0], extraction_prompt)
+        extracted_text = " ".join(extracted_text)
         torch.cuda.empty_cache()
         # Step 2: Classify document and detect language
         classification_prompt = self._create_classification_prompt(extracted_text)

@@ -7,7 +7,7 @@ def downstream(result):
     
     try:
         # Postprocess fields
-        formatted_fields = postprocessor.postprocess_fields(result)
+        formatted_fields = postprocessor.postprocess_fields(result["fields"])
         formatted_result["fields"] = formatted_fields
         
         return formatted_result

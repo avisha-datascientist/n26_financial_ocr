@@ -43,29 +43,42 @@ class DocumentPostprocessor:
         return date_str  # Return original if parsing fails
         
     def _format_amount(self, amount_str: str) -> str:
-        """Format monetary amount string.
+        """Format monetary amounts to 'amount currency_symbol' format.
         
         Args:
-            amount_str: Amount string to format
+            amount_str: String containing amount and possibly currency symbol
             
         Returns:
             Formatted amount string
         """
-        if not amount_str:
-            return amount_str
+        try:
+            # Remove any existing currency symbols and whitespace
+            amount_str = amount_str.strip()
             
-        # Extract currency symbol and amount
-        currency_match = re.search(r'([€$£])\s*([\d,.]+)', amount_str)
-        if currency_match:
-            currency = currency_match.group(1)
-            amount = currency_match.group(2)
-            # Format amount with thousands separator and decimal point
-            try:
-                amount = float(amount.replace(',', ''))
-                return f"{currency}{amount:,.2f}"
-            except ValueError:
-                return amount_str
-        return amount_str
+            # Extract currency symbol if present
+            currency_symbol = None
+            for symbol in ['€', '$', '£', 'CHF']:
+                if symbol in amount_str:
+                    currency_symbol = symbol
+                    amount_str = amount_str.replace(symbol, '').strip()
+                    break
+            
+            # If no currency symbol found, default to €
+            if not currency_symbol:
+                currency_symbol = '€'
+            
+            # Remove any thousand separators and replace decimal separator with dot
+            amount_str = amount_str.replace('.', '').replace(',', '.')
+            
+            # Convert to float and back to string to normalize
+            amount = float(amount_str)
+            
+            # Format as "amount currency_symbol"
+            return f"{amount} {currency_symbol}"
+            
+        except Exception as e:
+            print(f"Error formatting amount {amount_str}: {str(e)}")
+            return amount_str  # Return original string if formatting fails
         
     def _format_name(self, name_str: str) -> str:
         """Format name string preserving original capitalization.
