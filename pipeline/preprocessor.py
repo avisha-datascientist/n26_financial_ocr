@@ -71,7 +71,7 @@ class DocumentPreprocessor:
         Document Text:
         {extracted_text}
 
-        Return your response in the following JSON format:
+        Do not add any additional information or text, only return your response in the following JSON format:
         {{
             "document_type": "one of the document types listed above",
             "detected_language": "ISO language code (e.g., 'en', 'de', 'fr', 'es', 'it')",
@@ -111,10 +111,12 @@ class DocumentPreprocessor:
             - document_type: Classified document type
             - confidence_score: Confidence in classification
         """
-        # Step 1: Extract text from the document
+        image_paths = self._load_pdf_to_image(document_path)
+
         extraction_prompt = self._create_extraction_prompt()
-        extracted_text = await self.model.process_document(document_path, extraction_prompt)
-        
+        extracted_text = await self.model.process_document(image_paths[0], extraction_prompt)
+        extracted_text = " ".join(extracted_text)
+        print(extracted_text)
         torch.cuda.empty_cache()
         # Step 2: Classify document and detect language
         classification_prompt = self._create_classification_prompt(extracted_text)

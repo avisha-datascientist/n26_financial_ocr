@@ -2,7 +2,7 @@ import asyncio
 from pipeline.main_process import DocumentProcessor
 from downstream import downstream
 from benchmark.models.qwen import QwenModel
-from evaluation import evaluation
+from evaluation import final_evaluation
 async def document_extractor():
     # Initialize Qwen model
     model = QwenModel()
@@ -24,14 +24,13 @@ async def document_extractor():
 
         formatted_result = downstream(result)
 
-        evaluation_result = evaluation(document_path, result['fields'], result['document_type'])
+        print(formatted_result)
 
-        rule_compliance_result = check_rule_compliance(formatted_result)
+        evaluation_result, rule_compliance_result = final_evaluation(document_path, result['fields'], result['document_type'], formatted_result)
 
-        # Save results
-        output_path = "/Users/avishabhiryani/Documents/private/N26_GenAI_Take_Home_Assignment/results"
-        postprocessor.save_results(formatted_result, output_path)
-        print(f"\nResults saved to {output_path}")
+        print(evaluation_result)
+        print(rule_compliance_result)
+
     except Exception as e:
         print(f"Error during processing: {str(e)}")
 

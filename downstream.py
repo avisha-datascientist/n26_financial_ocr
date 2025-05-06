@@ -1,5 +1,5 @@
 import asyncio
-from postprocessor import DocumentPostprocessor
+from pipeline.postprocessor import DocumentPostprocessor
 
 def downstream(result):
     # Initialize postprocessor
@@ -8,9 +8,9 @@ def downstream(result):
     try:
         # Postprocess fields
         formatted_fields = postprocessor.postprocess_fields(result)
-        formatted_result["fields"] = formatted_fields
+        formatted_fields["fields"] = formatted_fields
         
-        return formatted_result
+        return formatted_fields
         
     except Exception as e:
         print(f"Error during postprocessing: {str(e)}")

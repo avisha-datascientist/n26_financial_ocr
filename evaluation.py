@@ -1,4 +1,5 @@
 import openai
+import json
 
 def evaluation(document_path, extracted_fields, document_type):
 
@@ -60,3 +61,10 @@ def check_rule_compliance(formatted_result: dict):
         temperature=0.2
     )
     return json.loads(response.choices[0].message["content"])
+
+
+def final_evaluation(document_path, extracted_fields, document_type, formatted_result):
+    evaluation_result = evaluation(document_path, extracted_fields, document_type)
+    rule_compliance_result = check_rule_compliance(formatted_result)
+
+    return evaluation_result, rule_compliance_result
