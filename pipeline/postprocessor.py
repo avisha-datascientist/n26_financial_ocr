@@ -6,33 +6,38 @@ from pathlib import Path
 
 class DocumentPostprocessor:
     def __init__(self):
-        """Initialize the document postprocessor."""
-        self.date_formats = {
-            'en': ['%Y-%m-%d', '%d/%m/%Y', '%m/%d/%Y', '%B %d, %Y'],
-            'de': ['%d.%m.%Y', '%Y-%m-%d', '%d. %B %Y'],
-            'fr': ['%d/%m/%Y', '%Y-%m-%d', '%d %B %Y'],
-            'es': ['%d/%m/%Y', '%Y-%m-%d', '%d de %B de %Y'],
-            'it': ['%d/%m/%Y', '%Y-%m-%d', '%d %B %Y']
-        }
+        pass
+        
         
     def _format_date(self, date_str: str, language: str) -> str:
-        """Format date string according to language-specific rules.
+        """Format date string to dd.mm.yyyy format.
         
         Args:
             date_str: Date string to format
-            language: Language code for formatting rules
             
         Returns:
-            Formatted date string
+            Formatted date string in dd.mm.yyyy format
         """
         if not date_str:
             return date_str
             
+        # Common date formats to try
+        date_formats = [
+            '%Y-%m-%d',    # 2023-12-31
+            '%d/%m/%Y',    # 31/12/2023
+            '%m/%d/%Y',    # 12/31/2023
+            '%d.%m.%Y',    # 31.12.2023
+            '%Y.%m.%d',    # 2023.12.31
+            '%d %B %Y',    # 31 December 2023
+            '%B %d, %Y',   # December 31, 2023
+        ]
+        
         # Try to parse the date using various formats
-        for fmt in self.date_formats.get(language, self.date_formats['en']):
+        for fmt in date_formats:
             try:
                 date = datetime.strptime(date_str, fmt)
-                return date.strftime(fmt)  # Return in original format
+                # Convert to dd.mm.yyyy format
+                return date.strftime('%d.%m.%Y')
             except ValueError:
                 continue
         return date_str  # Return original if parsing fails
@@ -106,13 +111,13 @@ class DocumentPostprocessor:
                 continue
                 
             # Apply appropriate formatting based on field type
-            if any(keyword in field.lower() for keyword in ['date', 'datum', 'fecha', 'data']):
+            if any(keyword in field.lower() for keyword in ['document_date', 'statement_period', 'effective_date', 'payment_due_date']):
                 formatted_fields[field] = self._format_date(value, language)
-            elif any(keyword in field.lower() for keyword in ['amount', 'betrag', 'importe', 'importo']):
+            elif any(keyword in field.lower() for keyword in ['portfolio_value', 'opening_balance', 'closing_balance', 'available_balance', 'garnishment_amount', 'credit_limit', 'minimum_payment', 'previous_balance', 'new_balance']):
                 formatted_fields[field] = self._format_amount(value)
-            elif any(keyword in field.lower() for keyword in ['name', 'nombre', 'nome']):
+            elif any(keyword in field.lower() for keyword in ['customer_name', 'debtor_name', 'creditor_name']):
                 formatted_fields[field] = self._format_name(value)
-            elif any(keyword in field.lower() for keyword in ['address', 'adresse', 'dirección', 'indirizzo']):
+            elif any(keyword in field.lower() for keyword in ['institution_address', 'adresse', 'dirección', 'indirizzo']):
                 formatted_fields[field] = self._format_address(value)
             else:
                 formatted_fields[field] = value

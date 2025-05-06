@@ -1,8 +1,9 @@
 from typing import Dict, Any, List
 import json
+import torch
 from pathlib import Path
 from benchmark.models.qwen import QwenModel
-from preprocessing import DocumentPreprocessor
+from pipeline.preprocessor import DocumentPreprocessor
 
 class DocumentProcessor:
     def __init__(self, model: QwenModel):
@@ -52,7 +53,7 @@ class DocumentProcessor:
         Document Text:
         {extracted_text}
         
-        Return your response in the following JSON format and nothing else:
+        Do not add any other text or comments. Return your response ONLY in the following JSON format and nothing else:
         {{
             "fields": {{
                 "field_name": "extracted_value",
@@ -83,7 +84,7 @@ class DocumentProcessor:
         """
         # First, preprocess the document
         preprocess_result = await self.preprocessor.preprocess_document(document_path)
-        
+        torch.cuda.empty_cache()
         # Create extraction prompt
         prompt = self._create_extraction_prompt(
             preprocess_result["document_type"],
@@ -92,8 +93,8 @@ class DocumentProcessor:
         )
         
         # Process with model
-        result = await self.model.process_document(document_path, prompt)
-        
+        result = await self.model.process_document(None, prompt)
+        torch.cuda.empty_cache()
         # Parse the result
         try:
             extraction_result = json.loads(result)
