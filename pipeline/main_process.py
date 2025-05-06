@@ -94,6 +94,7 @@ class DocumentProcessor:
         
         # Process with model
         result = await self.model.process_document(None, prompt)
+        result = " ".join(result)
         torch.cuda.empty_cache()
         # Parse the result
         try:

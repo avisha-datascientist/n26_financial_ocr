@@ -9,7 +9,7 @@ class DocumentPostprocessor:
         pass
         
         
-    def _format_date(self, date_str: str, language: str) -> str:
+    def _format_date(self, date_str: str) -> str:
         """Format date string to dd.mm.yyyy format.
         
         Args:

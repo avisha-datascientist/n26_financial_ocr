@@ -78,10 +78,12 @@ class QwenModel(BaseModel):
           elif document is not None and isinstance(document, dict):
             # Handle dictionary case
             image_path = document.get("image_path")
+        else:
+            image_path = ""
 
 
           if prompt:
-            if image_path is not None:
+            if len(image_path) > 0:
               messages = [
               {
                   "role": "user",
